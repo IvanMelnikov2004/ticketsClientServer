@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Мои бронирования</title>
+    <style>
+        .booking-list {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .booking-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .booking-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .booking-status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-confirmed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-canceled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .cancel-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .cancel-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        header nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 18px;
+        }
+
+        header nav a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">Главная</a>
+            <a href="/auth">Регистрация</a>
+            <a href="/me">Личный кабинет</a>
+            <a href="/booking">Активные брони</a>
+        </nav>
+    </header>
+
+    <div class="booking-list">
+        <h1>Мои бронирования</h1>
+        <div id="bookingsContainer"></div>
+    </div>
+
+    <script>
+        const apiBaseUrl = "http://localhost:8080";
+
+        // Получение токена
+        function getAccessToken() {
+            return localStorage.getItem('accessToken');
+        }
+
+        // Обновление токена
+        async function refreshAccessToken() {
+            const refreshToken = localStorage.getItem('refreshToken');
+            if (!refreshToken) {
+                window.location.href = '/auth';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/auth/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refreshToken })
+                });
+
+                if (!response.ok) {
+                    window.location.href = '/auth';
+                    return;
+                }
+
+                const data = await response.json();
+                localStorage.setItem('accessToken', data.accessToken);
+                return data.accessToken;
+            } catch (error) {
+                console.error('Ошибка обновления токена:', error);
+                window.location.href = '/auth';
+            }
+        }
+
+        // Загрузка бронирований
+        async function loadBookings() {
+            const accessToken = getAccessToken();
+            if (!accessToken) {
+                window.location.href = '/auth';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/bookings/list`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    const newToken = await refreshAccessToken();
+                    if (newToken) {
+                        return loadBookings(); // Повторный запрос с новым токеном
+                    }
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки бронирований');
+                }
+
+                const bookings = await response.json();
+                renderBookings(bookings);
+            } catch (error) {
+                console.error('Ошибка:', error);
+                alert(error.message);
+            }
+        }
+
+        // Отмена бронирования
+        async function cancelBooking(bookingId) {
+        const accessToken = getAccessToken();
+        if (!accessToken) {
+            window.location.href = '/auth';
+            return;
+        }
+
+        try {
+            const response = await fetch(`${apiBaseUrl}/bookings/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    bookingId: bookingId
+                })
+            });
+
+            if (response.status === 401) {
+                const newToken = await refreshAccessToken();
+                if (newToken) {
+                    return cancelBooking(bookingId); // Повторный запрос с новым токеном
+                }
+                return;
+            }
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || 'Ошибка отмены бронирования');
+            }
+
+            // Обновляем список и интерфейс
+            await loadBookings();
+            alert('Бронирование успешно отменено!');
+
+        } catch (error) {
+            console.error('Ошибка:', error);
+            alert(error.message);
+        }
+    }
+
+        // Отрисовка бронирований
+        function renderBookings(bookings) {
+            const container = document.getElementById('bookingsContainer');
+            container.innerHTML = '';
+
+            bookings.forEach(booking => {
+                const bookingElement = document.createElement('div');
+                bookingElement.className = 'booking-item';
+                
+                const statusClass = `status-${booking.status.toLowerCase()}`;
+                const isCanceled = booking.status.toLowerCase() === 'canceled';
+
+                bookingElement.innerHTML = `
+                    <div class="booking-header">
+                        <div>
+                            <h3>Бронирование #${booking.id}</h3>
+                            <p>Дата создания: ${new Date(booking.bookingTime).toLocaleString()}</p>
+                        </div>
+                        <span class="booking-status ${statusClass}">${booking.status}</span>
+                    </div>
+                    <p>ID билета: ${booking.ticketId}</p>
+                    <p>Количество: ${booking.ticketQuantity}</p>
+                    <button 
+                        class="cancel-btn" 
+                        onclick="cancelBooking(${booking.id})" 
+                        ${isCanceled ? 'disabled' : ''}>
+                        ${isCanceled ? 'Отменено' : 'Отменить бронирование'}
+                    </button>
+                `;
+
+                container.appendChild(bookingElement);
+            });
+        }
+
+        // Загрузка при открытии страницы
+        document.addEventListener('DOMContentLoaded', loadBookings);
+    </script>
+</body>
+</html>

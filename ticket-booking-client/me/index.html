@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/">Главная</a>
+            <a href="/auth">Регистрация</a>
+            <a href="/me">Личный кабинет</a>
+            <a href="/booking">Активные брони</a>
+        </nav>
+    </header>
+
+    <h1>Личный кабинет</h1>
+    <section id="userInfo">
+        <h2>Информация о пользователе</h2>
+        <div id="userDetails">
+            <!-- Здесь будет информация о пользователе -->
+        </div>
+    </section>
+
+    <section id="depositSection">
+        <h2>Пополнение баланса</h2>
+        <form id="depositForm">
+            <label for="amount">Сумма пополнения:</label>
+            <input type="number" id="amount" name="amount" required>
+            <button type="submit">Пополнить</button>
+        </form>
+        <h3>Запросы на пополнение:</h3>
+        <div id="depositRequests">
+            <!-- Здесь будут отображаться запросы на пополнение -->
+        </div>
+    </section>
+    <footer>
+        <p>&copy; 2025 Сервис бронирования билетов</p>
+    </footer>
+    <script src="app.js"></script>
+</body>
+</html>
