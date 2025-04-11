@@ -63,7 +63,8 @@ public class SecurityConfig {
         // Разрешаем оба origin (localhost и 127.0.0.1)
         config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5500",
-                "http://127.0.0.1:5500"
+                "http://127.0.0.1:5500",
+                "http://nginx:80"
         ));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("*"));

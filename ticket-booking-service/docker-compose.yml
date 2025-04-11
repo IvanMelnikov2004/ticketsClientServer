@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13.0-alpine
+    container_name: postgres
+    restart: always
+
+    volumes:
+      - database:/var/lib/postgresql/data/
+    env_file:
+      - /.env
+
+    ports:
+      - "5432:5432"
+  auth-service:
+    build: .
+    container_name: auth-service
+    restart: always
+    depends_on:
+      - postgres
+    env_file:
+      - /.env
+
+    ports:
+      - "8080:8080"
+#  nginx:
+#    container_name: nginx
+#    image: nginx:1.21.3-alpine
+#    volumes:
+#      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+#      - static:/app/static/
+#      - ../ticket-booking-client:/app/ticket-booking-client
+#    ports:
+#      - "80:80"
+#    depends_on:
+#      - auth-service
+
+volumes:
+  database:
+  static:

@@ -18,16 +18,14 @@ public class BookingDaoImpl implements BookingDao{
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private final RowMapper<Booking> bookingRowMapper = (rs, rowNum) -> {
-        return Booking.builder()
-                .id(rs.getInt("id"))
-                .userId(rs.getLong("user_id"))
-                .ticketId(rs.getInt("ticket_id"))
-                .bookingTime(rs.getTimestamp("booking_time").toInstant().atZone(java.time.ZoneId.systemDefault()))
-                .status(rs.getString("status"))
-                .ticketQuantity(rs.getInt("ticket_quantity"))
-                .build();
-    };
+    private final RowMapper<Booking> bookingRowMapper = (rs, rowNum) -> Booking.builder()
+            .id(rs.getInt("id"))
+            .userId(rs.getLong("user_id"))
+            .ticketId(rs.getInt("ticket_id"))
+            .bookingTime(rs.getTimestamp("booking_time").toInstant().atZone(java.time.ZoneId.systemDefault()))
+            .status(rs.getString("status"))
+            .ticketQuantity(rs.getInt("ticket_quantity"))
+            .build();
 
     public Booking save(Booking booking) {
         String sql = """
