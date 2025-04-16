@@ -38,33 +38,31 @@
       width: 100%;
     }
     header {
-    background-color: #333;
-    color: white;
-    padding: 10px 20px;
-    text-align: center;
+      background-color: #333;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
     }
-
     header nav a {
-        color: white;
-        text-decoration: none;
-        margin: 0 15px;
-        font-size: 18px;
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-size: 18px;
     }
-
     header nav a:hover {
-        text-decoration: underline;
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-    <header>
-        <nav>
-            <a href="/">Главная</a>
-            <a href="/auth">Регистрация</a>
-            <a href="/me">Личный кабинет</a>
-            <a href="/booking">Активные брони</a>
-        </nav>
-    </header>
+  <header>
+      <nav>
+          <a href="/">Главная</a>
+          <a href="/auth">Регистрация</a>
+          <a href="/me">Личный кабинет</a>
+          <a href="/booking">Активные брони</a>
+      </nav>
+  </header>
 
   <div class="main-container">
     <!-- Левая колонка: формы поиска -->
@@ -82,17 +80,22 @@
           </div>
           <div class="form-group">
             <label for="ticket-type">Тип транспорта:</label>
-            <input type="text" id="ticket-type" name="type" placeholder="bus, avia, train">
+            <select id="ticket-type" name="type">
+              <option value="">-- Не выбрано --</option>
+              <option value="avia">avia</option>
+              <option value="bus">bus</option>
+              <option value="train">train</option>
+            </select>
           </div>
           <div class="form-group">
             <label for="ticket-startTime">Начало интервала:</label>
             <input type="text" id="ticket-startTime" class="datetime-input" name="startTime"
-                   required placeholder="дд.мм.гггг чч:мм" title="Формат: дд.мм.гггг чч:мм">
+                   placeholder="дд.мм.гггг чч:мм" title="Формат: дд.мм.гггг чч:мм">
           </div>
           <div class="form-group">
             <label for="ticket-endTime">Конец интервала:</label>
             <input type="text" id="ticket-endTime" class="datetime-input" name="endTime"
-                   required placeholder="дд.мм.гггг чч:мм" title="Формат: дд.мм.гггг чч:мм">
+                   placeholder="дд.мм.гггг чч:мм" title="Формат: дд.мм.гггг чч:мм">
           </div>
           <button type="submit">Поиск билетов</button>
         </form>
@@ -131,8 +134,6 @@
       <div id="closestPagination" class="pagination"></div>
     </div>
   </div>
-
-  
 
   <script>
     const apiBaseUrl = "http://localhost:8080"; // Новый базовый URL API
@@ -338,14 +339,27 @@
     document.getElementById('ticketSearchForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
+      // Создаем объект параметров с обязательными полями "from" и "to"
       ticketSearchParams = {
         from: formData.get('from'),
         to: formData.get('to'),
-        type: formData.get('type') || '',
-        startTime: parseLocalDateTime(formData.get('startTime')),
-        endTime: parseLocalDateTime(formData.get('endTime')),
         pageSize: 10
       };
+      // Если пользователь указал тип транспорта, дату начала или дату конца, добавляем в запрос
+      const typeValue = formData.get('type');
+      if (typeValue && typeValue.trim() !== "") {
+        ticketSearchParams.type = typeValue;
+      }
+      const startTimeValue = formData.get('startTime');
+      const parsedStartTime = parseLocalDateTime(startTimeValue);
+      if (parsedStartTime) {
+        ticketSearchParams.startTime = parsedStartTime;
+      }
+      const endTimeValue = formData.get('endTime');
+      const parsedEndTime = parseLocalDateTime(endTimeValue);
+      if (parsedEndTime) {
+        ticketSearchParams.endTime = parsedEndTime;
+      }
       console.log('Параметры поиска билетов:', ticketSearchParams);
       try {
         const response = await fetch(`${apiBaseUrl}/tickets/search`, {

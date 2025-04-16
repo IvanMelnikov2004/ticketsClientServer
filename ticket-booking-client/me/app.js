@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!accessToken || !refreshToken) {
         alert("Вы не авторизованы!");
-        window.location.href = "/login";
+        window.location.href = "/auth";
         return;
     }
 
