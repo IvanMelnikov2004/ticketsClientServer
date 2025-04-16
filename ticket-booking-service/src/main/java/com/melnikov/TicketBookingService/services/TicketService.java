@@ -4,12 +4,13 @@ import com.melnikov.TicketBookingService.dao.RouteDao;
 import com.melnikov.TicketBookingService.dao.TicketDao;
 import com.melnikov.TicketBookingService.dto.*;
 import com.melnikov.TicketBookingService.entity.Ticket;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
 import java.util.List;
-
+@Slf4j
 @Service
 public class TicketService {
     private final TicketDao ticketDao;
@@ -57,7 +58,7 @@ public class TicketService {
     public TicketSearchResponseDto searchTickets(TicketSearchRequestDto request) {
         ZonedDateTime defaultStartTime = ZonedDateTime.now().minusYears(10);
         ZonedDateTime defaultEndTime = ZonedDateTime.now().plusYears(10);
-
+        log.debug("recieved :" + request);
         // Устанавливаем курсор и размер страницы
         ZonedDateTime lastDepartureTime = request.getLastDepartureTime() != null ? request.getLastDepartureTime() : ZonedDateTime.now().minusYears(10);
         int lastId = request.getLastId() != null ? request.getLastId() : 0; // Если lastId не передан, берем 0
@@ -111,40 +112,7 @@ public class TicketService {
     }
 
 
-    @Transactional()
-    public ClosestRouteSearchResponseDto searchClosestRoutes(ClosestRouteSearchRequestDto request) {
-        // Получаем параметры из запроса
-        String departureCity = request.getFrom(); // Город отправления
-        String arrivalCity = request.getTo(); // Город прибытия
-        ZonedDateTime desiredDepartureTime = request.getDesiredDepartureTime(); // Желаемое время отправления
-        Integer lastId = request.getLastId(); // Курсор ID
-        ZonedDateTime lastDepartureTime = request.getLastDepartureTime() != null
-                ? request.getLastDepartureTime()
-                : desiredDepartureTime;
 
-        // Ищем ближайшие билеты
-        List<Ticket> tickets = ticketDao.findClosestTicketsWithPagination(
-                departureCity,
-                arrivalCity,
-                lastDepartureTime,
-                lastId,
-                request.getPageSize()
-        );
-
-
-
-
-        // Формируем ответ с курсорами
-        ClosestRouteSearchResponseDto response = new ClosestRouteSearchResponseDto();
-        response.setTickets(tickets);
-        if (!tickets.isEmpty()) {
-            Ticket lastTicket = tickets.get(tickets.size() - 1);
-            response.setNextCursorDepartureTime(lastTicket.getDepartureTime().withZoneSameInstant(java.time.ZoneOffset.UTC)); // Курсор в UTC
-            response.setNextCursorId(lastTicket.getId());
-        }
-
-        return response;
-    }
 
     private int mapTransportType(String type) {
         return switch (type) {

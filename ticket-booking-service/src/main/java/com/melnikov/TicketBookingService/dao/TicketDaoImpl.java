@@ -117,6 +117,7 @@ public class TicketDaoImpl implements TicketDao {
                    t.available_tickets
             FROM tickets t
             WHERE t.transport_type_id = ?
+              AND t.available_tickets > 0
               AND t.route_id = ?
               AND t.departure_time >= ?
               AND t.departure_time <= ?
@@ -164,50 +165,6 @@ public class TicketDaoImpl implements TicketDao {
                 Timestamp.from(lastDepartureTime.toInstant()), // Повторное сравнение по времени
                 lastId, // Курсор по ID
                 pageSize // Размер страницы
-        );
-    }
-
-    @Override
-    public List<Ticket> findClosestTicketsWithPagination(String departureCity, String arrivalCity, ZonedDateTime lastDepartureTime, Integer lastId, int pageSize) {
-        String sql = """
-        SELECT t.id, 
-               tt.name AS transport_type, 
-               r.departure_city, 
-               r.arrival_city,
-               t.departure_time,
-               t.arrival_time,
-               t.price,
-               t.available_tickets
-        FROM tickets t
-        JOIN transport_types tt ON t.transport_type_id = tt.id
-        JOIN routes r ON t.route_id = r.id
-        WHERE r.departure_city = ? -- Город отправления
-          AND r.arrival_city = ? -- Город прибытия
-          AND (t.departure_time > ? OR (t.departure_time = ? AND t.id > ?)) -- Курсоры
-        ORDER BY t.departure_time, t.id
-        LIMIT ?
-    """;
-
-        return jdbcTemplate.query(
-                sql,
-                (rs, rowNum) -> {
-                    Ticket ticket = new Ticket();
-                    ticket.setId(rs.getInt("id"));
-                    ticket.setTransportType(rs.getString("transport_type")); // Название типа транспорта
-                    ticket.setDepartureCity(rs.getString("departure_city")); // Город отправления
-                    ticket.setArrivalCity(rs.getString("arrival_city")); // Город прибытия
-                    ticket.setDepartureTime(rs.getTimestamp("departure_time").toInstant().atZone(java.time.ZoneId.systemDefault()));
-                    ticket.setArrivalTime(rs.getTimestamp("arrival_time").toInstant().atZone(java.time.ZoneId.systemDefault()));
-                    ticket.setPrice(rs.getInt("price"));
-                    ticket.setAvailableTickets(rs.getInt("available_tickets"));
-                    return ticket;
-                },
-                departureCity,
-                arrivalCity,
-                Timestamp.from(lastDepartureTime.toInstant()), // Для курсора времени отправления
-                Timestamp.from(lastDepartureTime.toInstant()), // Для тех же значений времени отправления
-                lastId != null ? lastId : 0, // Для курсора ID (если не указан, используем 0)
-                pageSize // Лимит записей
         );
     }
 }

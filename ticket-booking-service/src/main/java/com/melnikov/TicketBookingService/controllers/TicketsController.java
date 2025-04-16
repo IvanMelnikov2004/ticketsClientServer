@@ -37,8 +37,5 @@ public class TicketsController {
         return ticketService.searchTickets(request);
     }
 
-    @PostMapping("/closest-search")
-    public ClosestRouteSearchResponseDto searchClosestRoutes(@Valid @RequestBody ClosestRouteSearchRequestDto request) {
-        return ticketService.searchClosestRoutes(request);
-    }
+
 }
