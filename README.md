@@ -7,4 +7,4 @@ Java, Spring, Maven, postgresql, JWT, Client-server, REST API, jdbc, Jakarta Val
 Потом надо запустить файл start.sh.
 http://localhost:5500 - клиент.
 http://localhost:8080 - сервер.
-http://localhost:8080/swagger-ui/index.html - Документация SwaggerUI openAPI на 
+http://localhost:8080/swagger-ui/index.html - Документация SwaggerUI openAPI
