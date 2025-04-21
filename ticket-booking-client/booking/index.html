@@ -50,6 +50,11 @@
             background-color: #6c757d;
             cursor: not-allowed;
         }
+        .error {
+            color: red;
+            margin: 15px 0;
+            font-weight: bold;
+        }
 
         header {
             background-color: #333;
@@ -82,6 +87,7 @@
 
     <div class="booking-list">
         <h1>Мои бронирования</h1>
+        <div id="pageError" class="error" style="display:none;"></div>
         <div id="bookingsContainer"></div>
     </div>
 
@@ -117,13 +123,28 @@
                 localStorage.setItem('accessToken', data.accessToken);
                 return data.accessToken;
             } catch (error) {
-                console.error('Ошибка обновления токена:', error);
+                showError('Ошибка обновления токена');
                 window.location.href = '/auth';
             }
         }
 
+        // Показать сообщение об ошибке
+        function showError(message) {
+            const errDiv = document.getElementById('pageError');
+            errDiv.textContent = message;
+            errDiv.style.display = 'block';
+        }
+
+        // Очистить сообщение об ошибке
+        function clearError() {
+            const errDiv = document.getElementById('pageError');
+            errDiv.textContent = '';
+            errDiv.style.display = 'none';
+        }
+
         // Загрузка бронирований
         async function loadBookings() {
+            clearError();
             const accessToken = getAccessToken();
             if (!accessToken) {
                 window.location.href = '/auth';
@@ -145,6 +166,11 @@
                     return;
                 }
 
+                if (response.status === 429) {
+                    showError('Ошибка 429: слишком много запросов. Попробуйте позже.');
+                    return;
+                }
+
                 if (!response.ok) {
                     throw new Error('Ошибка загрузки бронирований');
                 }
@@ -152,53 +178,54 @@
                 const bookings = await response.json();
                 renderBookings(bookings);
             } catch (error) {
-                console.error('Ошибка:', error);
-                alert(error.message);
+                showError(error.message);
             }
         }
 
         // Отмена бронирования
         async function cancelBooking(bookingId) {
-        const accessToken = getAccessToken();
-        if (!accessToken) {
-            window.location.href = '/auth';
-            return;
-        }
-
-        try {
-            const response = await fetch(`${apiBaseUrl}/bookings/cancel`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    bookingId: bookingId
-                })
-            });
-
-            if (response.status === 401) {
-                const newToken = await refreshAccessToken();
-                if (newToken) {
-                    return cancelBooking(bookingId); // Повторный запрос с новым токеном
-                }
+            clearError();
+            const accessToken = getAccessToken();
+            if (!accessToken) {
+                window.location.href = '/auth';
                 return;
             }
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || 'Ошибка отмены бронирования');
+            try {
+                const response = await fetch(`${apiBaseUrl}/bookings/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ bookingId })
+                });
+
+                if (response.status === 401) {
+                    const newToken = await refreshAccessToken();
+                    if (newToken) {
+                        return cancelBooking(bookingId); // Повторный запрос с новым токеном
+                    }
+                    return;
+                }
+
+                if (response.status === 429) {
+                    showError('Ошибка 429: слишком много запросов. Попробуйте позже.');
+                    return;
+                }
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Ошибка отмены бронирования');
+                }
+
+                // Обновляем список и интерфейс
+                await loadBookings();
+                showError('Бронирование успешно отменено!');
+            } catch (error) {
+                showError(error.message);
             }
-
-            // Обновляем список и интерфейс
-            await loadBookings();
-            alert('Бронирование успешно отменено!');
-
-        } catch (error) {
-            console.error('Ошибка:', error);
-            alert(error.message);
         }
-    }
 
         // Отрисовка бронирований
         function renderBookings(bookings) {
@@ -229,7 +256,6 @@
                         ${isCanceled ? 'Отменено' : 'Отменить бронирование'}
                     </button>
                 `;
-
                 container.appendChild(bookingElement);
             });
         }

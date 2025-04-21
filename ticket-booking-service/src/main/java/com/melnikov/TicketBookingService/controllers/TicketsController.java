@@ -3,6 +3,7 @@ package com.melnikov.TicketBookingService.controllers;
 import com.melnikov.TicketBookingService.dto.*;
 import com.melnikov.TicketBookingService.entity.Ticket;
 import com.melnikov.TicketBookingService.services.TicketService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ public class TicketsController {
     }
 
     @PostMapping("/create")
+    @RateLimiter(name = "defaultLimiter")
     public ResponseEntity<?> createTicket(@Valid @RequestBody TicketCreateRequestDto request) {
         log.info("Server time: {}", ZonedDateTime.now());
         log.info("Received departureTime: {}", request.getDepartureTime());
@@ -32,6 +34,7 @@ public class TicketsController {
     }
 
     @PostMapping("/search")
+    @RateLimiter(name = "defaultLimiter")
     public TicketSearchResponseDto searchTickets(@Valid @RequestBody TicketSearchRequestDto request) {
 
         return ticketService.searchTickets(request);

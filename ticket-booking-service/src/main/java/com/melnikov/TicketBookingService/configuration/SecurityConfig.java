@@ -44,7 +44,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/bookings/**").authenticated()
                         .requestMatchers("/deposits/**").authenticated()
                         .requestMatchers("/users/**").authenticated()
-                        .requestMatchers("/bookings/**").authenticated()
+                        .requestMatchers("/bookings/**").authenticated().
+                        requestMatchers(
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**"
+                        ).permitAll()
                         // Для /tickets: только POST запрос на /tickets/create доступен только с ролью ADMIN
                         .requestMatchers(HttpMethod.POST, "/tickets/create").hasRole("ADMIN")
                         // Остальные эндпоинты /tickets/** (например, поиск) – оставляем открытыми или можно требовать аутентификации,

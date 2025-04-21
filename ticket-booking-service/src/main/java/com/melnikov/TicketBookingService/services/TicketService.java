@@ -100,13 +100,26 @@ public class TicketService {
 
         // Устанавливаем билеты в ответ
         response.setTickets(ticketList);
-
-        // Устанавливаем новый курсор, если есть данные
         if (!ticketList.isEmpty()) {
             Ticket lastTicket = ticketList.get(ticketList.size() - 1);
             response.setNextCursor(lastTicket.getDepartureTime());
             response.setNextId(lastTicket.getId());
         }
+        for (Ticket ticket : ticketList){
+            ticket.setArrivalCity(request.getTo());
+            ticket.setDepartureCity(request.getFrom());
+            ticket.setDepartureTime(ticket.getDepartureTime().minusHours(3));
+            ticket.setArrivalTime(ticket.getArrivalTime().minusHours(3));
+            String transportType = switch (ticket.getTransportTypeId()) {
+                case 1 -> "bus";
+                case 2 -> "avia";
+                case 3 -> "train";
+                default -> "null";
+            };
+            ticket.setTransportType(transportType);
+        }
+        // Устанавливаем новый курсор, если есть данные
+
 
         return response;
     }

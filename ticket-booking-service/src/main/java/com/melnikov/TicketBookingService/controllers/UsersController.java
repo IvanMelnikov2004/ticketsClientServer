@@ -5,6 +5,7 @@ import com.melnikov.TicketBookingService.dto.NewPasswordRequestDto;
 import com.melnikov.TicketBookingService.entity.User;
 import com.melnikov.TicketBookingService.services.JwtService;
 import com.melnikov.TicketBookingService.services.UserService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
+
 public class UsersController {
     private final UserService userService;
     private final JwtService jwtService;
@@ -22,6 +24,7 @@ public class UsersController {
     }
 
     @PutMapping("/change-password")
+    @RateLimiter(name = "defaultLimiter")
     public ResponseEntity<?> changePassword(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody @Valid NewPasswordRequestDto newPasswordRequestDto) {
@@ -34,6 +37,7 @@ public class UsersController {
     }
 
     @GetMapping("/info")
+
     public ResponseEntity<User> getCurrentUserInfo(
             @RequestHeader("Authorization") String authHeader) {
 

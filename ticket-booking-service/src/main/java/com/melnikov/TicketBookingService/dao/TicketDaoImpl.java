@@ -116,6 +116,7 @@ public class TicketDaoImpl implements TicketDao {
                    t.price,
                    t.available_tickets
             FROM tickets t
+            JOIN transport_types tt ON t.transport_type_id = tt.id
             WHERE t.transport_type_id = ?
               AND t.available_tickets > 0
               AND t.route_id = ?

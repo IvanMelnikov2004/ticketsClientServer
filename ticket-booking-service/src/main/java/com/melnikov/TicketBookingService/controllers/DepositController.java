@@ -7,6 +7,7 @@ import com.melnikov.TicketBookingService.dto.DepositRequestDto;
 import com.melnikov.TicketBookingService.entity.Deposit;
 import com.melnikov.TicketBookingService.services.DepositService;
 import com.melnikov.TicketBookingService.services.JwtService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ public class DepositController {
     }
 
     @PostMapping("/create")
+    @RateLimiter(name = "defaultLimiter")
     public ResponseEntity<?> createDeposit(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody @Valid DepositRequestDto depositRequestDto) {
@@ -37,6 +39,7 @@ public class DepositController {
     }
 
     @PostMapping("/confirm")
+    @RateLimiter(name = "defaultLimiter")
     public ResponseEntity<?> confirmDeposit(@RequestBody @Valid DepositConfirmDto request) {
         depositService.confirmDeposit(request.getDepositId(), request.getStatus());
         return ResponseEntity.ok("Deposit " + request.getStatus() + " successfully.");
@@ -44,6 +47,7 @@ public class DepositController {
 
 
     @GetMapping("/last")
+    @RateLimiter(name = "defaultLimiter")
     public ResponseEntity<?> getLastDeposits(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.substring(7);
         Claims claims = jwtService.extractClaims(token);

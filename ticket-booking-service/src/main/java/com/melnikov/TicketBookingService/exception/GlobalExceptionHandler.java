@@ -2,6 +2,7 @@ package com.melnikov.TicketBookingService.exception;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.melnikov.TicketBookingService.dto.ErrorResponseDto;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import jakarta.security.auth.message.AuthException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -115,6 +116,13 @@ public class GlobalExceptionHandler {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponseDto("ILLEGAL_ARGUMENT", ex.getMessage()));
+    }
+
+    @ExceptionHandler(RequestNotPermitted.class)
+    public ResponseEntity<String> handleRateLimiterException(RequestNotPermitted ex) {
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .body("Too many requests. Please try again later.");
     }
 
     @ExceptionHandler(Exception.class)
